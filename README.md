@@ -1,9 +1,9 @@
 # AI Content Creator
 
-Yükledigim dosya, proje ve fotograflardan ögrenip **her hafta kendi kendine içerik paketi üreten** bir sistem.
-Bütçe sifir: ücretsiz katmanlar, açik kaynak modeller ve kendi donanimim.
+YÃ¼kledigim dosya, proje ve fotograflardan Ã¶grenip **her hafta kendi kendine iÃ§erik paketi Ã¼reten** bir sistem.
+BÃ¼tÃ§e sifir: Ã¼cretsiz katmanlar, aÃ§ik kaynak modeller ve kendi donanimim.
 
-> **Durum:** Faz 1 (egitim) · Hafta 2 tamamlaniyor. Bu repo su an hem ögrenme defteri (dersler/) hem de projenin ilk backend'i.
+> **Durum:** Faz 1 (egitim) Â· Hafta 2 tamamlaniyor. Bu repo su an hem Ã¶grenme defteri (dersler/) hem de projenin ilk backend'i.
 
 ---
 
@@ -11,33 +11,33 @@ Bütçe sifir: ücretsiz katmanlar, açik kaynak modeller ve kendi donanimim.
 
 `
 Kaynaklar (PDF, repo, fotograf)
-   ¦  dizüstü: bge-m3 embedding, Florence-2 / Qwen2.5-VL (4-bit)
+   Â¦  dizÃ¼stÃ¼: bge-m3 embedding, Florence-2 / Qwen2.5-VL (4-bit)
    ?
 Neon (Postgres + pgvector)  ?--?  FastAPI backend  ?--  Streamlit panel / Telegram onayi
-   ?                                   ¦
-   ¦                                   ?
-GitHub Actions (haftalik cron) --? Gemini (metin) · Cloudflare Workers AI (görsel) · R2 (dosyalar)
+   ?                                   Â¦
+   Â¦                                   ?
+GitHub Actions (haftalik cron) --? Gemini (metin) Â· Cloudflare Workers AI (gÃ¶rsel) Â· R2 (dosyalar)
 `
 
-Kisisel model üç katmanli, sifirdan egitim yok:
+Kisisel model Ã¼Ã§ katmanli, sifirdan egitim yok:
 **RAG** (bilgi) ? **stil profili + few-shot** (ses) ? yeterli veri birikince **LoRA** (stil).
 
 ---
 
-## Su an çalisan kisim
+## Su an Ã§alisan kisim
 
-FastAPI + Neon üzerinde, içerik kaydi ve dosya yükleme yapan bir API.
+FastAPI + Neon Ã¼zerinde, iÃ§erik kaydi ve dosya yÃ¼kleme yapan bir API.
 
 | Metot | Endpoint | Ne yapar |
 |---|---|---|
-| GET | / | Saglik kontrolü |
-| POST | /icerikler | Içerik olusturur (Pydantic dogrulama, det 1–10) ? 201 |
-| GET | /icerikler?platform=&limit= | Içerikleri listeler, platforma göre filtreler |
-| GET | /icerikler/{id} | Tek içerik, yoksa 404 |
-| POST | /yukle | Dosya yükler, SHA-256 hash ile metadata'yi Postgres'e yazar. Ayni dosya tekrar gelirse 409 |
-| GET | /dosyalar | Yüklenen dosyalarin listesi |
+| GET | / | Saglik kontrolÃ¼ |
+| POST | /icerikler | IÃ§erik olusturur (Pydantic dogrulama, det 1â€“10) ? 201 |
+| GET | /icerikler?platform=&limit= | IÃ§erikleri listeler, platforma gÃ¶re filtreler |
+| GET | /icerikler/{id} | Tek iÃ§erik, yoksa 404 |
+| POST | /yukle | Dosya yÃ¼kler, SHA-256 hash ile metadata'yi Postgres'e yazar. Ayni dosya tekrar gelirse 409 |
+| GET | /dosyalar | YÃ¼klenen dosyalarin listesi |
 
-Swagger arayüzü: http://127.0.0.1:8000/docs
+Swagger arayÃ¼zÃ¼: http://127.0.0.1:8000/docs
 
 ---
 
@@ -51,7 +51,7 @@ cd content-creator
 uv sync
 `
 
-Proje kökünde bir .env dosyasi olustur (GitHub'a gitmez):
+Proje kÃ¶kÃ¼nde bir .env dosyasi olustur (GitHub'a gitmez):
 
 `
 DATABASE_URL=postgresql://kullanici:sifre@host/neondb?sslmode=require
@@ -78,29 +78,29 @@ CREATE TABLE dosyalar (
 );
 `
 
-## Çalistirma
+## Ã‡alistirma
 
 `powershell
 uv run fastapi dev dersler/app.py      # API sunucusu
-uv run dersler/istemci.py              # API'ye httpx ile örnek istekler (ikinci terminalde)
+uv run dersler/istemci.py              # API'ye httpx ile Ã¶rnek istekler (ikinci terminalde)
 `
 
 ---
 
-## Klasör yapisi
+## KlasÃ¶r yapisi
 
 `
 content-creator/
 +-- pyproject.toml, uv.lock     # bagimliliklar
 +-- main.py
 +-- dersler/
-¦   +-- api_deneme.py           # Ders 1: httpx, retry/backoff, GitHub API ile repo okuma
-¦   +-- async_deneme.py         # Ders 2: async/await, gather, AsyncClient, Semaphore
-¦   +-- semaphore_deneme.py     # Ders 2: eszamanlilik siniri denemesi
-¦   +-- async_github.py         # Ders 2: GitHub dosyalarini paralel indirme (taslak)
-¦   +-- app.py                  # Ders 3–4: FastAPI + Neon
-¦   +-- istemci.py              # Ders 3: kendi API'ye istek atan istemci
-¦   +-- db_deneme.py            # Ders 4: SQLAlchemy ile ilk baglanti
+Â¦   +-- api_deneme.py           # Ders 1: httpx, retry/backoff, GitHub API ile repo okuma
+Â¦   +-- async_deneme.py         # Ders 2: async/await, gather, AsyncClient, Semaphore
+Â¦   +-- semaphore_deneme.py     # Ders 2: eszamanlilik siniri denemesi
+Â¦   +-- async_github.py         # Ders 2: GitHub dosyalarini paralel indirme (taslak)
+Â¦   +-- app.py                  # Ders 3â€“4: FastAPI + Neon
+Â¦   +-- istemci.py              # Ders 3: kendi API'ye istek atan istemci
+Â¦   +-- db_deneme.py            # Ders 4: SQLAlchemy ile ilk baglanti
 +-- veri/                       # yerel veriler (GitHub'a gitmez)
 `
 
@@ -110,7 +110,7 @@ content-creator/
 
 | Alan | Kullanilan |
 |---|---|
-| Dil, paket yönetimi | Python 3.12, uv |
+| Dil, paket yÃ¶netimi | Python 3.12, uv |
 | HTTP istemcisi | httpx (senkron + async) |
 | Backend | FastAPI, Pydantic, Uvicorn |
 | Veritabani | PostgreSQL (Neon), SQLAlchemy, psycopg |
@@ -121,19 +121,19 @@ content-creator/
 ## Yol haritasi
 
 **Faz 1: Egitim**
-- [x] **H1:** Ortam, Python temelleri, Git/GitHub. Mini proje: klasör tarayici
-- [ ] **H2:** HTTP, async, FastAPI, PostgreSQL, nesne depolama. Kapi: Swagger'dan yükle, DB'de gör *(R2 adimi kaldi)*
+- [x] **H1:** Ortam, Python temelleri, Git/GitHub. Mini proje: klasÃ¶r tarayici
+- [ ] **H2:** HTTP, async, FastAPI, PostgreSQL, nesne depolama. Kapi: Swagger'dan yÃ¼kle, DB'de gÃ¶r *(R2 adimi kaldi)*
 - [ ] **H3:** LLM, Gemini + Ollama, embedding, pgvector, RAG. Kapi: 20 soruda =16 dogru ve kaynakli
-- [ ] **H4:** Vision, görsel üretim, LoRA/QLoRA, TTS/ffmpeg
-- [ ] **H5:** Ajanlar, MCP, GitHub Actions cron, Docker, pytest, eval, Streamlit, güvenlik
+- [ ] **H4:** Vision, gÃ¶rsel Ã¼retim, LoRA/QLoRA, TTS/ffmpeg
+- [ ] **H5:** Ajanlar, MCP, GitHub Actions cron, Docker, pytest, eval, Streamlit, gÃ¼venlik
 
 **Faz 2: Production**
-- [ ] **H6–H10:** Kaynak alimi ? bilgi tabani ve stil profili ? üretim motoru ? otonomi ve Telegram onayi ? sertlestirme. Kapi: art arda 2 hafta sifir müdahale
+- [ ] **H6â€“H10:** Kaynak alimi ? bilgi tabani ve stil profili ? Ã¼retim motoru ? otonomi ve Telegram onayi ? sertlestirme. Kapi: art arda 2 hafta sifir mÃ¼dahale
 
 ---
 
 ## Notlar
 
-- .env ve eri/ asla commit edilmez.
+- .env ve veri/ asla commit edilmez.
 - SQL sorgulari her zaman :parametre yer tutuculariyla yazilir (SQL injection korumasi).
-- Ham dosyalar dis servislere gönderilmez. Gemini'ye sadece özetler gider.
+- Ham dosyalar dis servislere gÃ¶nderilmez. Gemini'ye sadece Ã¶zetler gider.
