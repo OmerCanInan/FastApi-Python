@@ -12,6 +12,7 @@ class IcerikGirdi(BaseModel):
 class Icerik(IcerikGirdi):
     id: int
     olusturma: datetime
+    durum: str
 
 
 class Dosya(BaseModel):
