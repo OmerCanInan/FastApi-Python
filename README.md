@@ -3,7 +3,7 @@
 Yüklediğim dosya, proje ve fotoğraflardan öğrenip **her hafta kendi kendine içerik paketi üreten** bir sistem.
 Bütçe sıfır: ücretsiz katmanlar, açık kaynak modeller ve kendi donanımım.
 
-> **Durum:** Faz 1 (eğitim) · Hafta 2 tamamlanıyor. Bu repo şu an hem öğrenme defteri (`dersler/`) hem de projenin ilk backend'i.
+> **Durum:** Faz 1 (eğitim) · Hafta 2 tamamlandı, Hafta 3 (LLM + RAG) başlıyor.
 
 ---
 
@@ -16,7 +16,7 @@ Kaynaklar (PDF, repo, fotoğraf)
 Neon (Postgres + pgvector)  ◄──►  FastAPI backend  ◄──  Streamlit panel / Telegram onayı
    ▲                                   │
    │                                   ▼
-GitHub Actions (haftalık cron) ──► Gemini (metin) · Cloudflare Workers AI (görsel) · R2 (dosyalar)
+GitHub Actions (haftalık cron) ──► Gemini (metin) · Cloudflare Workers AI (görsel) · S3 uyumlu depo (dosyalar)
 ```
 
 Kişisel model üç katmanlı, sıfırdan eğitim yok:
@@ -26,16 +26,17 @@ Kişisel model üç katmanlı, sıfırdan eğitim yok:
 
 ## Şu an çalışan kısım
 
-FastAPI + Neon üzerinde, içerik kaydı ve dosya yükleme yapan bir API.
+FastAPI + Neon + S3 uyumlu dosya deposu üzerinde içerik kaydı ve dosya yükleme yapan bir API.
 
 | Metot | Endpoint | Ne yapar |
 |---|---|---|
 | `GET` | `/` | Sağlık kontrolü |
-| `POST` | `/icerikler` | İçerik oluşturur (Pydantic doğrulama, `adet` 1–10) → `201` |
+| `POST` | `/icerikler` | İçerik oluşturur (Pydantic doğrulama, `adet` 1–10, `durum` = `taslak`) → `201` |
 | `GET` | `/icerikler?platform=&limit=` | İçerikleri listeler, platforma göre filtreler |
 | `GET` | `/icerikler/{id}` | Tek içerik, yoksa `404` |
-| `POST` | `/yukle` | Dosya yükler, SHA-256 hash ile metadata'yı Postgres'e yazar. Aynı dosya tekrar gelirse `409` |
+| `POST` | `/yukle` | Dosyayı depoya, metadata'yı Postgres'e yazar (tek transaction). Aynı hash tekrar gelirse `409` |
 | `GET` | `/dosyalar` | Yüklenen dosyaların listesi |
+| `GET` | `/dosyalar/{id}/link?sure=` | Dosya için süreli imzalı link (60–3600 sn) |
 
 Swagger arayüzü: `http://127.0.0.1:8000/docs`
 
@@ -43,11 +44,11 @@ Swagger arayüzü: `http://127.0.0.1:8000/docs`
 
 ## Kurulum
 
-Gereksinimler: Python 3.12, [uv](https://docs.astral.sh/uv/), bir [Neon](https://neon.com) projesi.
+Gereksinimler: Python 3.12, [uv](https://docs.astral.sh/uv/), bir [Neon](https://neon.com) projesi, S3 uyumlu bir bucket.
 
 ```powershell
-git clone https://github.com/OmerCanInan/content-creator.git
-cd content-creator
+git clone https://github.com/OmerCanInan/FastApi-Python.git
+cd FastApi-Python
 uv sync
 ```
 
@@ -55,34 +56,35 @@ Proje kökünde bir `.env` dosyası oluştur (GitHub'a gitmez):
 
 ```
 DATABASE_URL=postgresql://kullanici:sifre@host/neondb?sslmode=require
+S3_ENDPOINT=https://depo-adresi
+S3_REGION=bolge
+S3_BUCKET=bucket-adi
+S3_ACCESS_KEY=erisim-anahtari
+S3_SECRET_KEY=gizli-anahtar
 ```
 
-Neon SQL Editor'de tabloları oluştur:
+Tabloları Alembic ile oluştur:
 
-```sql
-CREATE TABLE icerikler (
-    id         SERIAL PRIMARY KEY,
-    baslik     TEXT NOT NULL,
-    platform   TEXT NOT NULL,
-    adet       INTEGER NOT NULL DEFAULT 1 CHECK (adet BETWEEN 1 AND 10),
-    olusturma  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE dosyalar (
-    id         SERIAL PRIMARY KEY,
-    ad         TEXT NOT NULL,
-    tur        TEXT,
-    boyut      INTEGER NOT NULL,
-    hash       TEXT NOT NULL UNIQUE,
-    yuklenme   TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+```powershell
+uv run alembic upgrade head
 ```
+
+---
 
 ## Çalıştırma
 
 ```powershell
-uv run fastapi dev dersler/app.py      # API sunucusu
-uv run dersler/istemci.py              # API'ye httpx ile örnek istekler (ikinci terminalde)
+uv run fastapi dev src/content_creator/main.py   # API sunucusu → http://127.0.0.1:8000/docs
+```
+
+Şema değişikliği (SQL Editor'de elle `CREATE` / `ALTER` yapılmaz):
+
+```powershell
+uv run alembic revision -m "aciklama"   # yeni migration dosyası
+uv run alembic upgrade head             # DB'yi son sürüme taşı
+uv run alembic downgrade -1             # bir adım geri al
+uv run alembic current                  # DB hangi sürümde
+uv run alembic history                  # migration zinciri
 ```
 
 ---
@@ -90,19 +92,24 @@ uv run dersler/istemci.py              # API'ye httpx ile örnek istekler (ikinc
 ## Klasör yapısı
 
 ```
-content-creator/
-├── pyproject.toml, uv.lock     # bağımlılıklar
-├── main.py
-├── dersler/
-│   ├── api_deneme.py           # Ders 1: httpx, retry/backoff, GitHub API ile repo okuma
-│   ├── async_deneme.py         # Ders 2: async/await, gather, AsyncClient, Semaphore
-│   ├── semaphore_deneme.py     # Ders 2: eşzamanlılık sınırı denemesi
-│   ├── async_github.py         # Ders 2: GitHub dosyalarını paralel indirme (taslak)
-│   ├── app.py                  # Ders 3–4: FastAPI + Neon
-│   ├── istemci.py              # Ders 3: kendi API'ye istek atan istemci
-│   └── db_deneme.py            # Ders 4: SQLAlchemy ile ilk bağlantı
-└── veri/                       # yerel veriler (GitHub'a gitmez)
+FastApi-Python/
+├── pyproject.toml, uv.lock          # bağımlılıklar
+├── alembic.ini                      # Alembic ayarları (bağlantı adresi .env'den gelir)
+├── migrations/
+│   ├── env.py                       # DB_URL'i content_creator.db'den alır
+│   └── versions/                    # şema değişiklikleri (baseline, add durum, ...)
+├── src/content_creator/
+│   ├── main.py                      # FastAPI app, router'ları birleştirir
+│   ├── db.py                        # SQLAlchemy engine (Neon)
+│   ├── depo.py                      # boto3 istemcisi (S3 uyumlu depo)
+│   ├── modeller.py                  # Pydantic şemaları
+│   └── routers/
+│       ├── icerikler.py             # /icerikler
+│       └── dosyalar.py              # /yukle, /dosyalar, /link
+└── veri/                            # yerel veriler (GitHub'a gitmez)
 ```
+
+Bağımlılık yönü tek taraflı: `main` → `routers` → `db` / `depo` / `modeller`. Alttaki modüller üsttekileri import etmez.
 
 ---
 
@@ -113,8 +120,9 @@ content-creator/
 | Dil, paket yönetimi | Python 3.12, uv |
 | HTTP istemcisi | httpx (senkron + async) |
 | Backend | FastAPI, Pydantic, Uvicorn |
-| Veritabanı | PostgreSQL (Neon), SQLAlchemy, psycopg |
-| Planlanan | pgvector, Gemini API, Ollama, Cloudflare R2 + Workers AI, GitHub Actions, Docker, Streamlit |
+| Veritabanı | PostgreSQL (Neon), SQLAlchemy Core, psycopg, Alembic |
+| Dosya deposu | S3 uyumlu depo, boto3, presigned URL |
+| Planlanan | pgvector, Gemini API, Ollama, Cloudflare Workers AI, GitHub Actions, Docker, Streamlit |
 
 ---
 
@@ -122,7 +130,7 @@ content-creator/
 
 **Faz 1: Eğitim**
 - [x] **H1:** Ortam, Python temelleri, Git/GitHub. Mini proje: klasör tarayıcı
-- [ ] **H2:** HTTP, async, FastAPI, PostgreSQL, nesne depolama. Kapı: Swagger'dan yükle, DB'de gör *(R2 adımı kaldı)*
+- [x] **H2:** HTTP, async, FastAPI, PostgreSQL, nesne depolama, Alembic. Kapı: Swagger'dan yükle, DB'de gör, linkle aç
 - [ ] **H3:** LLM, Gemini + Ollama, embedding, pgvector, RAG. Kapı: 20 soruda ≥16 doğru ve kaynaklı
 - [ ] **H4:** Vision, görsel üretim, LoRA/QLoRA, TTS/ffmpeg
 - [ ] **H5:** Ajanlar, MCP, GitHub Actions cron, Docker, pytest, eval, Streamlit, güvenlik
@@ -136,4 +144,6 @@ content-creator/
 
 - `.env` ve `veri/` asla commit edilmez.
 - SQL sorguları her zaman `:parametre` yer tutucularıyla yazılır (SQL injection koruması).
+- Şema değişiklikleri sadece Alembic migration'ı ile yapılır; migration ve ilgili kod aynı commit'e girer.
 - Ham dosyalar dış servislere gönderilmez. Gemini'ye sadece özetler gider.
+- Commit mesajları İngilizce ve Conventional Commits formatında (`feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
