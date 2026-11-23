@@ -19,7 +19,8 @@ def icerik_olustur(girdi: IcerikGirdi) -> Icerik:
 
 
 @router.get("")
-def icerikleri_listele(platform: str | None = None, limit: int = 10) -> list[Icerik]:
+def icerikleri_listele(platform: str | None = None,
+    limit: int = Query(default=10, ge=1, le=100)) -> list[Icerik]:  # YENİ
     sql = "SELECT * FROM icerikler"
     parametreler = {"limit": limit}
     if platform:
