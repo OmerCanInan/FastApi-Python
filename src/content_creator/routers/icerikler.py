@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query  # YENİ: Query
 from sqlalchemy import text
 
 from content_creator.db import engine
