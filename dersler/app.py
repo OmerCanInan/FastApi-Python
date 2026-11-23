@@ -88,21 +88,21 @@ def icerik_getir(icerik_id: int) -> Icerik:
 async def dosya_yukle(dosya: UploadFile) -> Dosya:
     veri = await dosya.read()
     ozet = hashlib.sha256(veri).hexdigest()
-    anahtar = f"yuklenenler/{ozet}"  # YENİ
-    s3.put_object(  # YENİ
-        Bucket=BUCKET,  # YENİ
-        Key=anahtar,  # YENİ
-        Body=veri,  # YENİ
-        ContentType=dosya.content_type or "application/octet-stream",  # YENİ
-    )  # YENİ
+    anahtar = f"yuklenenler/{ozet}"
     try:
         with engine.begin() as b:
             satir = b.execute(
-                text("INSERT INTO dosyalar (ad, tur, boyut, hash, depo_anahtari) "  # YENİ
-                     "VALUES (:ad, :tur, :boyut, :hash, :depo_anahtari) RETURNING *"),  # YENİ
+                text("INSERT INTO dosyalar (ad, tur, boyut, hash, depo_anahtari) "
+                     "VALUES (:ad, :tur, :boyut, :hash, :depo_anahtari) RETURNING *"),
                 {"ad": dosya.filename, "tur": dosya.content_type,
-                 "boyut": len(veri), "hash": ozet, "depo_anahtari": anahtar},  # YENİ
+                 "boyut": len(veri), "hash": ozet, "depo_anahtari": anahtar},
             ).one()
+            s3.put_object(  # YENİ: INSERT'ten sonra, transaction içinde
+                Bucket=BUCKET,
+                Key=anahtar,
+                Body=veri,
+                ContentType=dosya.content_type or "application/octet-stream",
+            )
     except IntegrityError:
         raise HTTPException(status_code=409, detail="Bu dosya zaten yüklenmiş")
     return Dosya(**satir._mapping)
