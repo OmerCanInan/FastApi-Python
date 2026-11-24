@@ -8,9 +8,14 @@ from pydantic import BaseModel, ValidationError  # YENİ: ValidationError
 
 load_dotenv()
 
-client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+client = genai.Client(
+    api_key=os.environ["GEMINI_API_KEY"],
+    http_options=types.HttpOptions(
+        retry_options=types.HttpRetryOptions(attempts=1),
+    ),
+)
 
-MODELLER = {
+LLM_MODELLERI = {
     "yazar": os.environ["GEMINI_MODEL_YAZAR"],
     "hafif": os.environ["GEMINI_MODEL_HAFIF"],
     "elestirmen": os.environ["GEMINI_MODEL_ELESTIRMEN"],
@@ -39,8 +44,11 @@ def uret(rol: str, icerik: str, sistem: str | None = None,
     for i in range(deneme):
         try:
             cevap = client.models.generate_content(
-                model=MODELLER[rol], contents=icerik, config=ayar
+                model=LLM_MODELLERI[rol], contents=icerik, config=ayar
             )
+            if not cevap.text:
+                sebep = cevap.candidates[0].finish_reason if cevap.candidates else "aday yok"
+                raise ValueError(f"Model boş cevap döndü. Sebep: {sebep}")
             if sema is None:  # YENİ
                 return cevap.text  # YENİ           
             try:

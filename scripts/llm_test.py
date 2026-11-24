@@ -1,9 +1,9 @@
-from content_creator.llm import MODELLER, client
+from content_creator.llm import LLM_MODELLERI, client
 from content_creator.llm import uret
 from pydantic import BaseModel
 from google.genai import types
 
-for rol, model in MODELLER.items():
+for rol, model in LLM_MODELLERI.items():
  
     print(rol, "→", model)
 print(uret("hafif", "BIST 100'ü tek cümleyle anlat.", sistem="Kısa ve sade cevap ver.", sicaklik=0.0)),
