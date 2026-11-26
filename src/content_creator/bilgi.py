@@ -11,6 +11,10 @@ def parcalari_kaydet(kaynak: str, metinler: list[str]) -> int:
         for i, (m, v) in enumerate(zip(metinler, vektorler))
     ]
     with engine.begin() as b:
+        b.execute(  # YENİ
+            text("DELETE FROM parcalar WHERE kaynak = :kaynak"),  # YENİ
+            {"kaynak": kaynak},  # YENİ
+        )  # YENİ
         b.execute(
             text("INSERT INTO parcalar (kaynak, sira, metin, embedding) "
                  "VALUES (:kaynak, :sira, :metin, CAST(:embedding AS vector)) "
