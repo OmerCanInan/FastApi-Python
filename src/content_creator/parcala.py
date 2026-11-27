@@ -2,20 +2,22 @@ import ast
 
 AYIRICILAR = ("\n\n", "\n", ". ", " ")
 
+
 def markdown_parcala(metin: str) -> list[str]:
     parcalar = []
     mevcut = []
-    kod_blogunda = False  # YENİ
+    kod_blogunda = False
     for satir in metin.splitlines():
-        if satir.startswith("```"):  # YENİ
-            kod_blogunda = not kod_blogunda  # YENİ
-        if satir.startswith("#") and mevcut and not kod_blogunda:  # YENİ: and not kod_blogunda
+        if satir.startswith("```"):
+            kod_blogunda = not kod_blogunda
+        if satir.startswith("#") and mevcut and not kod_blogunda:
             parcalar.append("\n".join(mevcut).strip())
             mevcut = []
         mevcut.append(satir)
     if mevcut:
         parcalar.append("\n".join(mevcut).strip())
     return [p for p in parcalar if p]
+
 
 def boyuta_bol(metin: str, sinir: int = 1200,
                ayiricilar: tuple[str, ...] = AYIRICILAR) -> list[str]:
@@ -43,11 +45,13 @@ def boyuta_bol(metin: str, sinir: int = 1200,
         sonuc.append(mevcut)
     return sonuc
 
+
 def metin_parcala(metin: str, sinir: int = 1200) -> list[str]:
     sonuc = []
     for bolum in markdown_parcala(metin):
         sonuc.extend(boyuta_bol(bolum, sinir))
     return sonuc
+
 
 TANIMLAR = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 

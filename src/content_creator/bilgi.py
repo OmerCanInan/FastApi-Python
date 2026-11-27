@@ -10,29 +10,44 @@ def parcalari_kaydet(kaynak: str, metinler: list[str]) -> int:
         {"kaynak": kaynak, "sira": i, "metin": m, "embedding": str(v)}
         for i, (m, v) in enumerate(zip(metinler, vektorler))
     ]
-    with engine.begin() as b:
-        b.execute(  # YENİ
-            text("DELETE FROM parcalar WHERE kaynak = :kaynak"),  # YENİ
-            {"kaynak": kaynak},  # YENİ
-        )  # YENİ
-        b.execute(
-            text("INSERT INTO parcalar (kaynak, sira, metin, embedding) "
-                 "VALUES (:kaynak, :sira, :metin, CAST(:embedding AS vector)) "
-                 "ON CONFLICT (kaynak, sira) DO UPDATE "
-                 "SET metin = EXCLUDED.metin, embedding = EXCLUDED.embedding"),
+    with engine.begin() as baglanti:
+        baglanti.execute(
+            text("DELETE FROM parcalar WHERE kaynak = :kaynak"),
+            {"kaynak": kaynak},
+        )
+        baglanti.execute(
+            text("""
+                INSERT INTO parcalar (kaynak, sira, metin, embedding)
+                VALUES (:kaynak, :sira, :metin, CAST(:embedding AS vector))
+            """),
             satirlar,
         )
     return len(satirlar)
 
+
 def ara(soru: str, k: int = 5) -> list[dict]:
     soru_vektoru = str(vektorle([soru])[0])
-    with engine.connect() as b:
-        satirlar = b.execute(
-                        text("SELECT kaynak, sira, metin, "
-                 "embedding <=> CAST(:v AS vector) AS uzaklik "
-                 "FROM parcalar "
-                 "ORDER BY embedding <=> CAST(:v AS vector) "  # YENİ: alias yerine ifade
-                 "LIMIT :k"),
-            {"v": soru_vektoru, "k": k}
-        ).all()
-    return [dict(s._mapping) for s in satirlar]
+    sorgu = text("""
+        SELECT kaynak, sira, metin, embedding <=> CAST(:v AS vector) AS uzaklik
+        FROM parcalar
+        ORDER BY embedding <=> CAST(:v AS vector)
+        LIMIT :k
+    """)
+    with engine.connect() as baglanti:
+        satirlar = baglanti.execute(sorgu, {"v": soru_vektoru, "k": k}).mappings().all()
+    return [dict(s) for s in satirlar]
+
+
+def kelime_ara(soru: str, k: int = 5) -> list[dict]:
+    sorgu = text("""
+        SELECT kaynak, sira, metin, ts_rank(arama, q) AS skor
+        FROM parcalar,
+             to_tsquery('turkish',
+                 replace(plainto_tsquery('turkish', :soru)::text, ' & ', ' | ')) AS q
+        WHERE arama @@ q
+        ORDER BY skor DESC
+        LIMIT :k
+    """)
+    with engine.connect() as baglanti:
+        satirlar = baglanti.execute(sorgu, {"soru": soru, "k": k}).mappings().all()
+    return [dict(s) for s in satirlar]

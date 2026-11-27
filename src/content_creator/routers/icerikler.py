@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query  # YENİ: Query
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import text
 
 from content_creator.db import engine
@@ -20,7 +20,7 @@ def icerik_olustur(girdi: IcerikGirdi) -> Icerik:
 
 @router.get("")
 def icerikleri_listele(platform: str | None = None,
-    limit: int = Query(default=10, ge=1, le=100)) -> list[Icerik]:  # YENİ
+    limit: int = Query(default=10, ge=1, le=100)) -> list[Icerik]:
     sql = "SELECT * FROM icerikler"
     parametreler = {"limit": limit}
     if platform:
