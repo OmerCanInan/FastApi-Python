@@ -25,7 +25,7 @@ def parcalari_kaydet(kaynak: str, metinler: list[str]) -> int:
     return len(satirlar)
 
 
-def ara(soru: str, k: int = 5) -> list[dict]:
+def anlam_ara(soru: str, k: int = 5) -> list[dict]:
     soru_vektoru = str(vektorle([soru])[0])
     sorgu = text("""
         SELECT kaynak, sira, metin, embedding <=> CAST(:v AS vector) AS uzaklik
@@ -51,3 +51,21 @@ def kelime_ara(soru: str, k: int = 5) -> list[dict]:
     with engine.connect() as baglanti:
         satirlar = baglanti.execute(sorgu, {"soru": soru, "k": k}).mappings().all()
     return [dict(s) for s in satirlar]
+
+RRF_K = 60
+
+
+def ara(soru: str, k: int = 5) -> list[dict]:
+    listeler = [anlam_ara(soru, k=20), kelime_ara(soru, k=20)]
+    puanlar = {}
+    metinler = {}
+    for liste in listeler:
+        for sira, p in enumerate(liste, start=1):
+            anahtar = (p["kaynak"], p["sira"])
+            puanlar[anahtar] = puanlar.get(anahtar, 0) + 1 / (RRF_K + sira)
+            metinler[anahtar] = p["metin"]
+    en_iyiler = sorted(puanlar, key=puanlar.get, reverse=True)[:k]
+    return [
+        {"kaynak": a[0], "sira": a[1], "metin": metinler[a], "puan": puanlar[a]}
+        for a in en_iyiler
+    ]
