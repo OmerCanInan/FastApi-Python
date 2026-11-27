@@ -52,7 +52,7 @@ def metin_parcala(metin: str, sinir: int = 1200) -> list[str]:
 TANIMLAR = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 
 
-def kod_parcala(kod: str) -> list[str]:
+def kod_parcala(kod: str) -> list[tuple[str,str]]:
     agac = ast.parse(kod)
     satirlar = kod.splitlines()
     ust_kisim = []
@@ -63,9 +63,9 @@ def kod_parcala(kod: str) -> list[str]:
             bas = dugum.decorator_list[0].lineno
         parca = "\n".join(satirlar[bas - 1:dugum.end_lineno])
         if isinstance(dugum, TANIMLAR):
-            parcalar.append(parca)
+            parcalar.append((dugum.name, parca))
         else:
             ust_kisim.append(parca)
     if ust_kisim:
-        parcalar.insert(0, "\n".join(ust_kisim))
+        parcalar.insert(0, ("_ust", "\n".join(ust_kisim)))
     return parcalar
