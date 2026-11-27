@@ -1,0 +1,102 @@
+[
+  {
+    "soru": "Gemini hata verirse kaç kez tekrar deneniyor?",
+    "beklenen": "429, 500 ve 503 hatalarında en fazla 3 kez deneniyor",
+    "kaynak": "src/content_creator/llm.py"
+  },
+  {
+    "soru": "Gemini'ye giden bir istek en fazla ne kadar bekleyebilir?",
+    "beklenen": "60 saniye (60_000 ms timeout)",
+    "kaynak": "src/content_creator/llm.py"
+  },
+  {
+    "soru": "İçerikler listelenirken varsayılan olarak kaç kayıt geliyor, en fazla kaç tane istenebilir?",
+    "beklenen": "Varsayılan 10, en az 1, en fazla 100",
+    "kaynak": "src/content_creator/routers/icerikler.py"
+  },
+  {
+    "soru": "Bir içerik oluştururken adet alanına hangi değerler girilebilir?",
+    "beklenen": "1 ile 10 arası, varsayılan 1",
+    "kaynak": "src/content_creator/modeller.py"
+  },
+  {
+    "soru": "Metinler bölünürken bir parça en fazla kaç karakter olabiliyor?",
+    "beklenen": "1200 karakter",
+    "kaynak": "src/content_creator/parcala.py"
+  },
+  {
+    "soru": "Dosya için oluşturulan link kaç saniye geçerli?",
+    "beklenen": "Varsayılan 600 saniye, 60 ile 3600 saniye arasında ayarlanabilir",
+    "kaynak": "src/content_creator/routers/dosyalar.py"
+  },
+  {
+    "soru": "Yüklenen bir dosya depoda hangi isimle saklanıyor?",
+    "beklenen": "yuklenenler/ klasöründe, dosya içeriğinin SHA-256 hash'i adıyla",
+    "kaynak": "src/content_creator/routers/dosyalar.py"
+  },
+  {
+    "soru": "Var olmayan bir içerik istenirse ne oluyor?",
+    "beklenen": "404 hatası döner (İçerik bulunamadı)",
+    "kaynak": "src/content_creator/routers/icerikler.py"
+  },
+  {
+    "soru": "Aynı dosya iki kez yüklenirse ne olur?",
+    "beklenen": "409 hatası döner, dosya tekrar kaydedilmez",
+    "kaynak": "src/content_creator/routers/dosyalar.py"
+  },
+  {
+    "soru": "Metinleri vektöre çevirmek için hangi model kullanılıyor ve vektörler kaç boyutlu?",
+    "beklenen": "BAAI/bge-m3, 1024 boyut",
+    "kaynak": "src/content_creator/embed.py"
+  },
+  {
+    "soru": "Python kod dosyaları parçalara nasıl bölünüyor?",
+    "beklenen": "ast ile; her üst seviye fonksiyon ve sınıf (decorator dahil) ayrı parça olur, import gibi üst kısımlar tek parçada toplanır",
+    "kaynak": "src/content_creator/parcala.py"
+  },
+  {
+    "soru": "Kod parçalarının başındaki açıklamalar nereden geliyor?",
+    "beklenen": "Gemini (hafif model) dosyanın tamamını okuyup her fonksiyon ve sınıf için Türkçe açıklama yazıyor",
+    "kaynak": "src/content_creator/ozetle.py"
+  },
+  {
+    "soru": "Anlam araması ile kelime aramasının sonuçları nasıl birleştiriliyor?",
+    "beklenen": "RRF ile; her listedeki sıraya göre 1/(60+sıra) puanı verilip toplanıyor",
+    "kaynak": "src/content_creator/bilgi.py"
+  },
+  {
+    "soru": "Soru cevaplanırken modelin bilgi uydurması nasıl engelleniyor?",
+    "beklenen": "Sadece verilen parçaları kullanması söyleniyor; cevap yoksa 'Bilgi tabanında bu bilgi yok.' yazıyor",
+    "kaynak": "src/content_creator/cevap.py"
+  },
+  {
+    "soru": "Veritabanı tabloları nasıl oluşturuluyor?",
+    "beklenen": "uv run alembic upgrade head komutuyla (Alembic migration'ları)",
+    "kaynak": "README.md"
+  },
+  {
+    "soru": "API sunucusu nasıl başlatılır?",
+    "beklenen": "uv run fastapi dev src/content_creator/main.py",
+    "kaynak": "README.md"
+  },
+  {
+    "soru": "Kurulumda .env dosyasına veritabanı ve depo için hangi bilgiler yazılmalı?",
+    "beklenen": "DATABASE_URL ile S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY",
+    "kaynak": "README.md"
+  },
+  {
+    "soru": "Projede hangi ödeme sistemi kullanılıyor?",
+    "beklenen": "Bilgi tabanında bu bilgi yok.",
+    "kaynak": null
+  },
+  {
+    "soru": "Kullanıcılar sisteme nasıl giriş yapıyor, şifreler nasıl saklanıyor?",
+    "beklenen": "Bilgi tabanında bu bilgi yok.",
+    "kaynak": null
+  },
+  {
+    "soru": "Projede önbellek için Redis kullanılıyor mu?",
+    "beklenen": "Bilgi tabanında bu bilgi yok.",
+    "kaynak": null
+  }
+]

@@ -23,3 +23,11 @@ class Dosya(BaseModel):
     hash: str
     yuklenme: datetime
     depo_anahtari: str | None
+
+class SoruGirdi(BaseModel):
+    soru: str = Field(min_length=3, max_length=500)
+
+
+class SoruCevabi(BaseModel):
+    cevap: str
+    kaynaklar: list[str]
