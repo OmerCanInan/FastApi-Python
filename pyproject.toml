@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "OmerCanInan", email = "omer1243a@gmail.com" }
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.14"
 dependencies = [
     "alembic>=1.20.1",
     "boto3>=1.44.3",
@@ -16,8 +16,17 @@ dependencies = [
     "python-dotenv>=1.2.4",
     "sentence-transformers>=6.3.0",
     "sqlalchemy>=2.1.8",
+    "torch>=2.15.0",
 ]
 
 [build-system]
 requires = ["uv_build>=0.13.7,<0.14.0"]
 build-backend = "uv_build"
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu132" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu132"
+url = "https://download.pytorch.org/whl/cu132"
+explicit = true
