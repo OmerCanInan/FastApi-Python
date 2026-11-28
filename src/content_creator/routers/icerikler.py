@@ -13,7 +13,7 @@ def icerik_olustur(girdi: IcerikGirdi) -> Icerik:
         satir = b.execute(
             text("INSERT INTO icerikler (baslik, platform, adet) "
                  "VALUES (:baslik, :platform, :adet) RETURNING *"),
-            girdi.model_dump(),
+            girdi.model_dump(), # Pydantic modelini sözlüğe dönüştürmek için model_dump() kullanıyoruz
         ).one()
     return Icerik(**satir._mapping)
 
